@@ -20,14 +20,14 @@ with ui.card(full_screen=True):
         y_min = input.y_min()
         x_max = input.x_max()
         y_max = input.y_max()
-        if (force_expression == "" or x_max < x_min or y_max < y_min):
-            return
         if (x_min == "" or x_max == "" or y_min == "" or y_max == ""):
             return
         x_min = float(x_min)
         x_max = float(x_max)
         y_min = float(y_min)
         y_max = float(y_max)
+        if (force_expression == "" or x_max < x_min or y_max < y_min):
+            return
         if (abs(x_min) > 100000 or abs(x_max) > 100000 or abs(y_min) > 100000 or abs(y_max) > 100000):
             return
         x, y = np.meshgrid(np.linspace(x_min, x_max, n_points), np.linspace(y_min, y_max, n_points))    
