@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import sympy as sp  # Для символьных вычислений (интегралов)
 from shiny.express import input, render, ui, output
+from scipy.integrate import quad
 
 n_points = 100
 
@@ -13,29 +13,22 @@ ui.input_text("y_min", label="Выберите минимальный y: ")
 ui.input_text("x_max", label="Введите максимальный x: ")
 ui.input_text("y_max", label="Введите максимальный y: ")
 
-# Функция для нахождения потенциальной энергии через интегрирование
+# Функция для компоненты силы по x
+def integrate_Fx(x, y, force_expression):
+    F = eval(force_expression)
+    return F
+
+# Функция для компоненты силы по y
+def integrate_Fy(y, x, force_expression):
+    F = eval(force_expression)
+    return F
+
+# Функция для нахождения потенциальной энергии через интегрирование силы
 def potential_energy(x, y, force_expression):
-    # Символьные переменные
-    x_sym, y_sym = sp.symbols('x y')
-    
-    # Интерпретируем введенное выражение силы как функцию
-    F = eval(force_expression, {"x": x_sym, "y": y_sym})
-    
-    # Находим компоненты силы через частные производные
-    F_x = sp.diff(F, x_sym)  # Частная производная силы по x
-    F_y = sp.diff(F, y_sym)  # Частная производная силы по y
-    
-    # Интегрируем для нахождения потенциальной энергии
-    U_x = sp.integrate(-F_x, x_sym)  # Интеграл компоненты силы по x
-    U_y = sp.integrate(-F_y, y_sym)  # Интеграл компоненты силы по y
-    
-    # Общая потенциальная энергия - сумма интегралов
-    U = U_x + U_y
-    
-    # Превращаем выражение в числовую функцию для дальнейших вычислений
-    U_func = sp.lambdify((x_sym, y_sym), U, "numpy")
-    
-    return U_func(x, y)
+    # Интеграл по x и по y
+    U_x, _ = quad(integrate_Fx, x, 0, args=(y, force_expression))
+    U_y, _ = quad(integrate_Fy, y, 0, args=(x, force_expression))
+    return U_x + U_y
 
 with ui.card(full_screen=True):
     @render.plot
@@ -62,8 +55,11 @@ with ui.card(full_screen=True):
         # Создаем сетку координат
         x, y = np.meshgrid(np.linspace(x_min, x_max, n_points), np.linspace(y_min, y_max, n_points))
         
-        # Вычисляем потенциальную энергию
-        z = potential_energy(x, y, force_expression)
+        # Вычисляем потенциальную энергию на основе введенной силы
+        z = np.zeros_like(x)
+        for i in range(len(x)):
+            for j in range(len(y)):
+                z[i, j] = potential_energy(x[i, j], y[i, j], force_expression)
         
         # Визуализируем потенциальное поле
         plt.figure(figsize=(8, 6))
@@ -77,4 +73,3 @@ with ui.card(full_screen=True):
         plt.xlim(x_min, x_max)
         plt.ylim(y_min, y_max)
         return plt.show()
-
